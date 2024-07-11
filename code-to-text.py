@@ -1,8 +1,8 @@
 import os
 import sys
+import datetime
 
 from pprint import pprint
-
 
 
 def main(folder):
@@ -12,9 +12,13 @@ def main(folder):
     # create output file names all_code.txt
     output_file = 'all_code.txt'
     output_file = os.path.join(folder, output_file)
-    
+
+    # compute YYYYMMDD
+    today = datetime.date.today()
+    yyyymmdd = today.strftime('%Y%m%d')
+
     # add YYYYMMDD to output file name
-    output_file = output_file.replace('.txt', '_20210101.txt')
+    output_file = output_file.replace('.txt', '_' + yyyymmdd + '.txt')
 
     print('output_file:',output_file)
 
@@ -29,8 +33,8 @@ def main(folder):
 
                 filename = os.path.join(root, file)
 
-                # exclude folders
-                EXCLUDE_FOLDERS = ['.git','.vs','.vscode']
+                # exclude folders or filename
+                EXCLUDE_FOLDERS = ['.git','.vs','.vscode', output_file]
                 if any(folder in filename for folder in EXCLUDE_FOLDERS):
                     continue
 
@@ -63,4 +67,3 @@ if __name__ == '__main__':
         sys.exit(1)
 
     main(sys.argv[1])
-    
