@@ -34,12 +34,12 @@ def main(folder):
                 filename = os.path.join(root, file)
 
                 # exclude folders or filename
-                EXCLUDE_FOLDERS = ['.git','.vs','.vscode', output_file]
+                EXCLUDE_FOLDERS = ['.git','.vs','.vscode', output_file, 'srcSearchableList.dfm','untDataConnect.dfm','FastMM4.pas']
                 if any(folder in filename for folder in EXCLUDE_FOLDERS):
                     continue
 
-                EXCLUDE_EXTENSIONS = ['.pfx','.wsdl']
-                if any(filename.endswith(ext) for ext in EXCLUDE_EXTENSIONS):
+                EXCLUDE_EXTENSIONS = ['.pfx','.wsdl','.res','.ico','.identcache','.tlb','.dfm']
+                if any(filename.lower().endswith(ext) for ext in EXCLUDE_EXTENSIONS):
                     continue
 
                 if filename.startswith('.\\'):
@@ -54,8 +54,22 @@ def main(folder):
                 # read filename using readlines() and write to output file
                 with open(filename, 'r', encoding="utf-8") as f2:
                     lines = f2.readlines()
+                    skip = False
                     for line in lines:
-                        f.write(line)
+
+                        # strip Delphi binary data
+                        EXCLUDE_BLOBS = ['Image.Data = {','Icon.Data = {','Mask.Data = {','LargeGlyph.Data = {','Glyph.Data = {','ControlData = {','HotGlyph.Data = {'
+                                         ,'Picture.Data = {','Items.NodeData = {','BackgroundBitmap.Data = {','Bitmap = {']
+                        if any(blob in line for blob in EXCLUDE_BLOBS):
+                            skip = True
+                            continue
+
+                        if skip and line.strip().endswith('}'):
+                            skip = False
+                            continue
+
+                        if not skip:
+                            f.write(line)
 
                 f.write('\n```\n')
 
