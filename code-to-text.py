@@ -1,16 +1,18 @@
 import os
 import sys
 import datetime
+import fnmatch
 
 from pprint import pprint
 
 
-def main(folder):
+def main(folder, file_mask=None):
 
-    print('folder:',folder)
+    print('folder:', folder)
+    print('file_mask:', file_mask)
 
     # create output file names all_code.txt
-    output_file = 'all_code.txt'
+    output_file = 'text-to-code.txt'
     output_file = os.path.join(folder, output_file)
 
     # compute YYYYMMDD
@@ -20,9 +22,9 @@ def main(folder):
     # add YYYYMMDD to output file name
     output_file = output_file.replace('.txt', '_' + yyyymmdd + '.txt')
 
-    print('output_file:',output_file)
+    print('output_file:', output_file)
 
-#    assert not os.path.exists(output_file), 'Output file already exists: {}'.format(output_file)
+    # assert not os.path.exists(output_file), 'Output file already exists: {}'.format(output_file)
 
     # write to output file
     with open(output_file, 'w', encoding="utf-8") as f:
@@ -34,12 +36,15 @@ def main(folder):
                 filename = os.path.join(root, file)
 
                 # exclude folders or filename
-                EXCLUDE_FOLDERS = ['.git','.vs','.vscode', output_file, 'srcSearchableList.dfm','untDataConnect.dfm','FastMM4.pas']
+                EXCLUDE_FOLDERS = ['.git', '.vs', '.vscode', output_file, 'srcSearchableList.dfm', 'untDataConnect.dfm', 'FastMM4.pas']
                 if any(folder in filename for folder in EXCLUDE_FOLDERS):
                     continue
 
-                EXCLUDE_EXTENSIONS = ['.pfx','.wsdl','.res','.ico','.identcache','.tlb','.dfm']
+                EXCLUDE_EXTENSIONS = ['.pfx', '.wsdl', '.res', '.ico', '.identcache', '.tlb'] #, '.dfm']
                 if any(filename.lower().endswith(ext) for ext in EXCLUDE_EXTENSIONS):
+                    continue
+
+                if file_mask and not fnmatch.fnmatch(file, file_mask):
                     continue
 
                 if filename.startswith('.\\'):
@@ -58,8 +63,8 @@ def main(folder):
                     for line in lines:
 
                         # strip Delphi binary data
-                        EXCLUDE_BLOBS = ['Image.Data = {','Icon.Data = {','Mask.Data = {','LargeGlyph.Data = {','Glyph.Data = {','ControlData = {','HotGlyph.Data = {'
-                                         ,'Picture.Data = {','Items.NodeData = {','BackgroundBitmap.Data = {','Bitmap = {']
+                        EXCLUDE_BLOBS = ['Image.Data = {', 'Icon.Data = {', 'Mask.Data = {', 'LargeGlyph.Data = {', 'Glyph.Data = {', 'ControlData = {', 'HotGlyph.Data = {'
+                                         , 'Picture.Data = {', 'Items.NodeData = {', 'BackgroundBitmap.Data = {', 'Bitmap = {']
                         if any(blob in line for blob in EXCLUDE_BLOBS):
                             skip = True
                             continue
@@ -76,8 +81,11 @@ def main(folder):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 2:
-        print('Usage: python code-to-text.py <input_folder>')
+    if len(sys.argv) < 2 or len(sys.argv) > 3:
+        print('Usage: python code-to-text.py <input_folder> [file_mask]')
         sys.exit(1)
 
-    main(sys.argv[1])
+    folder = sys.argv[1]
+    file_mask = sys.argv[2] if len(sys.argv) == 3 else None
+
+    main(folder, file_mask)
